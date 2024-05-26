@@ -1,10 +1,9 @@
+#pragma once
+
 #include <iostream>
 #include <string>
 #include <functional>
 #include <unordered_map>
-
-#ifndef CPU_H
-#define CPU_H
 
 // A Chip8 Emulated CPU
 class chip8
@@ -48,5 +47,3 @@ private:
     };
     static std::unordered_map<const unsigned short, opCodeFunction> opCodeMap;
 };
-
-#endif

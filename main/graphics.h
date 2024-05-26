@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_H
-#define GRAPHICS_H
+#pragma once
 
 /*
 use GLUT or SDL to handle graphics and input
@@ -25,5 +24,3 @@ void drawGraphics();
 Setup the graphics (window size, display mode, etc)
 */
 void setupGraphics();
-
-#endif
