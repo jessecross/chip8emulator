@@ -42,53 +42,74 @@ void chip8::setKeys()
     // TODO
 }
 
+Operations::Operations()
+{
+    opCodeTable[0x0]{&Operations::OP_opCodeTable0};
+    opCodeTable[0x1]{&Operations::OP_1nnn};
+    opCodeTable[0x2]{&Operations::OP_2nnn};
+    opCodeTable[0x3]{&Operations::OP_3xkk};
+    opCodeTable[0x4]{&Operations::OP_4xkk};
+    opCodeTable[0x5]{&Operations::OP_5xy0};
+    opCodeTable[0x6]{&Operations::OP_6xkk};
+    opCodeTable[0x7]{&Operations::OP_7xkk};
+    opCodeTable[0x8]{&Operations::OP_opCodeTable8};
+    opCodeTable[0x9]{&Operations::OP_9xy0};
+    opCodeTable[0xA]{&Operations::OP_Annn};
+    opCodeTable[0xB]{&Operations::OP_Bnnn};
+    opCodeTable[0xC]{&Operations::OP_Cxkk};
+    opCodeTable[0xD]{&Operations::OP_Dxyn};
+    opCodeTable[0xE]{&Operations::OP_opCodeTableE};
+    opCodeTable[0xF]{&Operations::OP_opCodeTableF};
+
+    for (size_t i = 0; i <= 0xE; i++)
+    {
+        opCodeTable0[i]{&Operations::OP_NULL};
+        opCodeTable8[i]{&Operations::OP_NULL};
+        opCodeTableE[i]{&Operations::OP_NULL};
+    }
+
+    for (size_t i = 0; i <= 0x65; i++)
+    {
+        opCodeTableF[i]{&Operations::OP_NULL};
+    }
+
+    opCodeTable0[0x0]{&Operations::OP_00E0};
+    opCodeTable0[0xE]{&Operations::OP_00EE};
+
+    opCodeTable8[0x0]{&Operations::OP_8xy0};
+    opCodeTable8[0x1]{&Operations::OP_8xy1};
+    opCodeTable8[0x2]{&Operations::OP_8xy2};
+    opCodeTable8[0x3]{&Operations::OP_8xy3};
+    opCodeTable8[0x4]{&Operations::OP_8xy4};
+    opCodeTable8[0x5]{&Operations::OP_8xy5};
+    opCodeTable8[0x6]{&Operations::OP_8xy6};
+    opCodeTable8[0x7]{&Operations::OP_8xy7};
+    opCodeTable8[0xE]{&Operations::OP_8xyE};
+
+    opCodeTableE[0xA1]{&Operations::OP_ExA1};
+    opCodeTableE[0x9E]{&Operations::OP_Ex9E};
+
+    opCodeTableF[0x07]{&Operations::OP_Fx07};
+    opCodeTableF[0x0A]{&Operations::OP_Fx0A};
+    opCodeTableF[0x15]{&Operations::OP_Fx15};
+    opCodeTableF[0x18]{&Operations::OP_Fx18};
+    opCodeTableF[0x1E]{&Operations::OP_Fx1E};
+    opCodeTableF[0x29]{&Operations::OP_Fx29};
+    opCodeTableF[0x33]{&Operations::OP_Fx33};
+    opCodeTableF[0x55]{&Operations::OP_Fx55};
+    opCodeTableF[0x65]{&Operations::OP_Fx65};
+}
+
 void Operations::executeOpCode(const unsigned char *memory, const unsigned short &pc)
 {
-    opCode = memory[pc] << 8 | memory[pc + 1]; // e.g. 0x00 + 0xE0 -> 0x00E0
+    opCode = (memory[pc] << 8) | memory[pc + 1]; // e.g. 0x00, 0xE0 -> 0x00E0
 
     try
     {
-        opCodeMap.at(opCode);
+        ((*this).*(opCodeTable[(opCode & 0xF000) >> 12]))(); // e.g. 0x1AAA -> 0x1000 -> 0x1
     }
-    catch (const std::out_of_range& e)
+    catch (const std::out_of_range &e)
     {
         std::cout << "opCode " << opCode << " does not exist." << std::endl;
     }
 }
-
-std::unordered_map<const unsigned short, Operations::opCodeFunction> Operations::opCodeMap{
-    {0x00E0, {"CLS", op_CLS}},
-    {0x00EE, {"RET", op_RET}},
-    {0x1NNN, {"JP", op_JP}},
-    {0x2NNN, {"CALL addr", op_CALL}},
-    {0x3XKK, {"SE Vx, byte", [vx, kk]()
-              { op_SE(vx, kk); }}},
-    {0x4XKK, {"SNE Vx, byte", op_SNE}},
-    {0x5XY0, {"SE Vx, Vy", op_SE}},
-    {0x6XKK, {"LD Vx, byte", op_LD}},
-    {0x7XKK, {"ADD Vx, byte", op_ADD}},
-    {0x8XY0, {"LD Vx, Vy", op_LD}},
-    {0x8XY1, {"OR Vx, Vy", op_OR}},
-    {0x8XY2, {"AND Vx, Vy", op_AND}},
-    {0x8XY3, {"XOR Vx, Vy", op_XOR}},
-    {0x8XY4, {"ADD Vx, Vy", op_ADD}},
-    {0x8XY5, {"SUB Vx, Vy", op_SUB}},
-    {0x8XY6, {"SHR Vx {, Vy}", op_SHR}},
-    {0x8XY7, {"SUBN Vx, Vy", op_SUBN}},
-    {0x8XYE, {"SHL Vx {, Vy}", op_SHL}},
-    {0x9XY0, {"SNE Vx, Vy", op_SNE}},
-    {0xANNN, {"LD I, addr", op_LD}},
-    {0xBNNN, {"JP V0, addr", op_JP}},
-    {0xCXKK, {"RND Vx, byte", op_RND}},
-    {0xDXYN, {"DRW Vx, Vy, nibble", op_DRW}},
-    {0xEX9E, {"SKP Vx", op_SKP}},
-    {0xEXA1, {"SKNP Vx", op_SKNP}},
-    {0xFX07, {"LD Vx, DT", op_LD}},
-    {0xFX0A, {"LD Vx, K", op_LD}},
-    {0xFX15, {"LD DT, Vx", op_LD}},
-    {0xFX18, {"LD ST, Vx", op_LD}},
-    {0xFX1E, {"ADD I, Vx", op_ADD}},
-    {0xFX33, {"LD B, Vx", op_LD}},
-    {0xFX55, {"LD [I], Vx", op_LD}},
-    {0xFX65, {"LD Vx, [I]", op_LD}},
-};
